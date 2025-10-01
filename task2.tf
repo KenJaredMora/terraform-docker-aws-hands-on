@@ -1,6 +1,6 @@
 module "s3_bucket" {
   source            = "./modules/s3_bucket"
-  bucket_name       = var.s3_bucket_name  # leave empty to auto-generate
+  bucket_name       = var.s3_bucket_name  # if i leave it empty is to auto-generate
   enable_versioning = true
 }
 
