@@ -18,6 +18,13 @@ resource "aws_security_group" "web_sg" {
     protocol    = "tcp"
     cidr_blocks = [var.allowed_cidr]
   }
+  /* ingress {
+    description = "TEMP: HTTP world"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  } */
 
   egress {
     from_port   = 0
@@ -36,6 +43,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   key_name                    = var.key_name != "" ? var.key_name : null
   user_data                   = var.user_data
+  user_data_replace_on_change = true
   iam_instance_profile        = var.iam_instance_profile != "" ? var.iam_instance_profile : null
   associate_public_ip_address = true
 

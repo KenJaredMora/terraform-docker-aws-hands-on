@@ -13,7 +13,6 @@ data "aws_subnets" "default_vpc_subnets" {
 locals {
   default_subnet_id = data.aws_subnets.default_vpc_subnets.ids[0]
 
-  # Install Docker and run your Docker Hub image (AL2 or AL2023)
   web_user_data = <<-EOF
     #!/bin/bash
     set -euxo pipefail
@@ -36,11 +35,12 @@ locals {
   EOF
 }
 
+
 module "web_server" {
   source        = "./modules/ec2_instance"
   instance_name = "devops-web"
   ami_id        = var.ami_id
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   vpc_id    = data.aws_vpc.default.id
   subnet_id = local.default_subnet_id
