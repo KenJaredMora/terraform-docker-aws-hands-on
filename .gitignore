@@ -5,7 +5,7 @@
 .terraform.lock.hcl
 *tfplan*
 
-# Local var files (keep your personal values out of git)
+# Local var files (in this way i create a file with this ext to keep my personal values out of git)
 *.auto.tfvars
 *.tfvars
 
@@ -14,9 +14,6 @@
 .DS_Store
 Thumbs.db
 .vscode/
-
-# Node/npm (in case you add scripts later)
-node_modules/
 
 
 # Artifacts / secrets
