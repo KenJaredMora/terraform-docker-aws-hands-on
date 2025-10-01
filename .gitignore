@@ -16,3 +16,9 @@ Thumbs.db
 
 # Node/npm (in case you add scripts later)
 node_modules/
+
+
+# Artifacts / secrets
+*.tar
+devops_image.tar
+*.pem
