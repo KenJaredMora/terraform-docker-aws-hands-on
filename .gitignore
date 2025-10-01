@@ -3,6 +3,7 @@
 *.tfstate.*
 .terraform/
 .terraform.lock.hcl
+*tfplan*
 
 # Local var files (keep your personal values out of git)
 *.auto.tfvars
@@ -22,3 +23,4 @@ node_modules/
 *.tar
 devops_image.tar
 *.pem
+*.key
