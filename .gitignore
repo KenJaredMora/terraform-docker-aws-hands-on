@@ -1,0 +1,20 @@
+@"
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Local var files (keep your personal values out of git)
+*.auto.tfvars
+*.tfvars
+
+# Logs / OS / Editor
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Node/npm (in case you add scripts later)
+node_modules/
+"@ | Set-Content -Encoding UTF8 ".gitignore"
