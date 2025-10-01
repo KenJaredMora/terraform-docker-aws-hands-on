@@ -1,4 +1,3 @@
-# Use default VPC for the lab (data source that selects the default VPC)
 data "aws_vpc" "default" {
   default = true
 }
@@ -45,10 +44,10 @@ module "web_server" {
   vpc_id    = data.aws_vpc.default.id
   subnet_id = local.default_subnet_id
 
-  # lock to your IP only (port 80 and 22)
+  # lock to my IP only (port 80 and 22)
   allowed_cidr = "${var.allowed_ip}/32"
 
-  # optional: set an existing EC2 key pair name if you want SSH
+  # optional: set an existing EC2 key pair name if we want SSH
   key_name = ""
 
   user_data = local.web_user_data
