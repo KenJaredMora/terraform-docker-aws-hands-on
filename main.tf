@@ -1,54 +1,80 @@
-data "aws_vpc" "default" {
-  default = true
+locals {
+  image_ref        = "${var.dockerhub_repo}:${var.dockerhub_tag}"
+  tags             = { Project = var.project_name }
+  ami_id_effective = coalesce(var.ami_id, data.aws_ssm_parameter.al2_ami.value)
 }
 
-data "aws_subnets" "default_vpc_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
+# ---------------- Task 2 prerequisite: S3 bucket ----------------
+module "s3" {
+  source        = "./modules/s3_bucket"
+  project_name  = var.project_name
+  bucket_suffix = "docker-images"
+  tags          = local.tags
+}
+
+
+# Replace IMAGE_REF within the userdata file (simple and readable)
+# ---------------- Task 1: EC2 runs NGINX container ----------------
+data "template_file" "task1_userdata" {
+  template = file("${path.module}/userdata_run_nginx.sh")
+  vars = {
+    dockerhub_image = local.image_ref # e.g., kenyonjared/nginx-hands-on:latest
   }
 }
 
-locals {
-  default_subnet_id = data.aws_subnets.default_vpc_subnets.ids[0]
-
-  web_user_data = <<-EOF
-    #!/bin/bash
-    set -euxo pipefail
-
-    if grep -q "Amazon Linux release 2" /etc/system-release 2>/dev/null; then
-      yum update -y
-      amazon-linux-extras install docker -y
-    elif grep -q 'Amazon Linux 2023' /etc/os-release 2>/dev/null; then
-      dnf update -y
-      dnf install -y docker
-    else
-      yum update -y || true
-      yum install -y docker || dnf install -y docker || true
-    fi
-
-    systemctl enable docker
-    systemctl start docker
-
-    docker run -d -p 80:80 ${var.docker_image}
-  EOF
+module "task1_ec2" {
+  source        = "./modules/ec2_instance"
+  name          = "${var.project_name}-task1"
+  ami_id        = local.ami_id_effective
+  instance_type = var.instance_type
+  user_data     = data.template_file.task1_userdata.rendered
+  allowed_cidr  = var.allowed_cidr
+  enable_ssh    = false
+  key_name      = var.key_name
+  tags          = local.tags
 }
 
+# ---------------- Task 2: EC2 pulls image -> uploads to S3 ----------
+data "template_file" "task2_userdata" {
+  template = file("${path.module}/userdata_pull_save_upload.sh")
+  vars = {
+    dockerhub_image = local.image_ref
+    bucket_name     = module.s3.bucket_name
+  }
+}
 
-module "web_server" {
+module "task2_ec2" {
+  source               = "./modules/ec2_instance"
+  name                 = "${var.project_name}-task2"
+  ami_id               = local.ami_id_effective
+  instance_type        = var.instance_type
+  user_data            = data.template_file.task2_userdata.rendered
+  allowed_cidr         = var.allowed_cidr
+  enable_ssh           = false
+  key_name             = var.key_name
+  iam_instance_profile = aws_iam_instance_profile.task2_profile.name
+  tags                 = local.tags
+}
+
+# Task 3: verify by running from S3 tar
+data "template_file" "task3_userdata" {
+  template = file("${path.module}/userdata_run_from_s3.sh")
+  vars = {
+    BUCKET = module.s3.bucket_name
+    KEY    = "image.tar"
+    IMAGE  = local.image_ref           # kenyonjared/nginx-hands-on:latest
+  }
+}
+
+module "task3_ec2" {
   source        = "./modules/ec2_instance"
-  instance_name = "devops-web"
-  ami_id        = var.ami_id
-  instance_type = "t3.micro"
-
-  vpc_id    = data.aws_vpc.default.id
-  subnet_id = local.default_subnet_id
-
-  # lock to my IP only (port 80 and 22)
-  allowed_cidr = "${var.allowed_ip}/32"
-
-  # optional: set an existing EC2 key pair name if we want SSH
-  key_name = ""
-
-  user_data = local.web_user_data
+  name          = "${var.project_name}-task3"
+  ami_id        = local.ami_id_effective
+  instance_type = var.instance_type
+  user_data     = data.template_file.task3_userdata.rendered
+  allowed_cidr  = var.allowed_cidr     # keeps HTTP limited to your IP
+  enable_ssh    = false
+  key_name      = var.key_name
+  iam_instance_profile = aws_iam_instance_profile.task3_profile.name
+  tags          = local.tags
 }
