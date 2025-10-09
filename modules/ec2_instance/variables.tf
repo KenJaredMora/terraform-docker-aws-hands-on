@@ -1,48 +1,48 @@
-variable "instance_name" {
-    description = "Name tag for the EC2 instance"
-    type        = string
+variable "name" {
+  type = string
 }
 
 variable "ami_id" {
-    description = "AMI ID to use for the EC2 instance"
-    type        = string
+  type    = string
+  default = null
 }
-
 variable "instance_type" {
-    description = "EC2 instance type"
-    type        = string
-    default     = "t3.micro"
+  type    = string
+  default = "t3.micro"
 }
-
-variable "key_name" {
-    description = "Key pair name for SSH access"
-    type        = string
-    default     = ""
-}
-
-variable "allowed_cidr" {
-    description = "CIDR block allowed to access the instance"
-    type        = string
-}
-
 variable "user_data" {
-    description = "User data script to run on instance launch"
-    type        = string
-    default     = ""
+  type    = string
+  default = ""
 }
-
+variable "allowed_cidr" {
+  type        = string
+  description = "e.g., 203.0.113.25/32"
+}
+variable "enable_ssh" {
+  type    = bool
+  default = false
+}
+variable "ssh_cidr" {
+  type    = string
+  default = "127.0.0.1/32"
+}
+variable "key_name" {
+  type    = string
+  default = null
+}
 variable "iam_instance_profile" {
-    description = "IAM instance profile name"
-    type        = string
-    default     = ""
+  type    = string
+  default = null
 }
-
 variable "vpc_id" {
-    description = "VPC ID where the instance will be deployed"
-    type        = string
+  type    = string
+  default = null
 }
-
 variable "subnet_id" {
-    description = "Subnet ID for the EC2 instance"
-    type        = string
+  type    = string
+  default = null
+}
+variable "tags" {
+  type    = map(string)
+  default = {}
 }
